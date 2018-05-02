@@ -1,0 +1,23 @@
+{
+  "name": "bitfinex-gw",
+  "dependencies": {
+    "config": "^1.30.0",
+    "crypto-js": "^3.1.9-1",
+    "express": "^4.16.3",
+    "js-yaml": "^3.11.0",
+    "lodash": "^4.17.5",
+    "moment": "^2.22.1",
+    "request": "^2.85.0",
+    "request-promise-native": "^1.0.5",
+    "typescript": "^2.8.1",
+    "ws": "^5.1.1"
+  },
+  "devDependencies": {
+    "@types/config": "^0.0.34",
+    "@types/crypto-js": "^3.1.39",
+    "@types/express": "^4.11.1",
+    "@types/lodash": "^4.14.107",
+    "@types/request-promise-native": "^1.0.14",
+    "@types/ws": "^4.0.2"
+  }
+}

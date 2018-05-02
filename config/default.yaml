@@ -1,0 +1,5 @@
+port: 8530
+wsport: 8531
+credentials:
+  public: 'APIKEY'
+  secret: 'SECRET'
