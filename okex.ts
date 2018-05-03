@@ -65,7 +65,6 @@ const publishOn = (ws: WebSocket) => {
       timestamp: order.timestamp.unix()
     }
     er.execId = CryptoJS.SHA1(JSON.stringify(er)).toString(CryptoJS.enc.Hex)
-    console.log(er)
     ws.send(JSON.stringify(er))
   }
 
@@ -81,7 +80,6 @@ const publishOn = (ws: WebSocket) => {
     }
     const m = JSON.stringify(login)
     exchWs.send(m)
-    console.log(sign({}).sig)
     console.log("Connected!")
   }
 
@@ -92,6 +90,7 @@ const publishOn = (ws: WebSocket) => {
         const orders = message[0].data
         switch(message[0].data.status) {
             case 0:
+              console.log("Active")
               handleOrder(orders)
               break
             case 1:
@@ -104,6 +103,7 @@ const publishOn = (ws: WebSocket) => {
               handleOrder(orders)
               break
             case -1:
+              console.log("Cancelled")
               handleOrder(orders)
               break
             default: console.log(`Listening on ${wsport}`)
@@ -111,26 +111,21 @@ const publishOn = (ws: WebSocket) => {
       }
     }
   }
-  const cancel: express.Handler = async (req, res) => {
-    console.log('cancel')
+  const cancel: express.Handler = (req, res) => {
     const api_key = credentials.public
     const symbol = "btc_usd"
     const contract_type = "next_week"
-    console.log(typeof(req.query.id))
     const order_id = req.query.id
-    console.log(order_id)
     const ocp = {api_key, symbol, contract_type, order_id}
     const ocs = sign(ocp).query
     const uri = `https://www.okex.com/api/v1/future_cancel.do?${ocs}`
-    console.log(uri)
-    const s = await request({
+    request({
       uri,
       method: 'POST',
     })
-    console.log(JSON.stringify(s))
-    exchWs.send(s)
+    res.end()
   }
-  app.post('/cancel', oc)
+  app.post('/cancel', cancel)
 }
 
 const wss = new WebSocket.Server({ port: wsport })
@@ -138,59 +133,6 @@ wss.on('connection', ws => {
   publishOn(ws)
 })
 
-
-/*
-const m = sign({}).query
-const f = async () => {
-  const uri = `https://www.okex.com/api/v1/future_userinfo.do?${m}`
-  console.log(uri)
-  const rep = await request({
-    uri,
-    method: 'POST',
-  })
-  console.log(rep)
-}
-f()
-*/
-
-
-const api_key = credentials.public
-const symbol = "btc_usd"
-const contract_type = "next_week"
-//const order_id = "688886532021248"
-//const ocp = {api_key, symbol, contract_type, order_id}
-//const ocs = sign(ocp).query
-const oc: express.Handler = async (req, res) => {
-  const order_id = req.query.id
-  const ocp = {api_key, symbol, contract_type, order_id}
-  const ocs = sign(ocp).query
-  const uri = `https://www.okex.com/api/v1/future_cancel.do?${ocs}`
-  console.log(uri)
-  const s = await request({
-    uri,
-    method: 'POST',
-  })
-  console.log(s)
-}
-
-
-const price = '1000'
-const amount = '1'
-const type = '1'
-const onp = {api_key, symbol, contract_type, price, amount, type}
-const ons = sign(onp).query
-const on = async () => {
-  const uri = `https://www.okex.com/api/v1/future_trade.do?${ons}`
-  console.log(uri)
-  const req = await request ({
-    uri,
-    method: 'POST'
-  })
-  console.log(req)
-}
-
-app.post('/cancel', oc)
-app.post('/new', on)
 
 app.listen(port, () => {
   console.log(`Listening on ${port}`)
