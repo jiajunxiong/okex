@@ -45,7 +45,7 @@ const parseOrder = (order: any) => {
   const {lever_rate, amount, orderid, contract_id, fee, contract_name, unit_amount, price_avg, type, deal_amount, contract_type, user_id, system_type, price, create_date_str, create_date, status} = order
   const timestamp = moment(create_date_str)
   return {
-    orderid, contract_name, status, deal_amount, amount, price, price_avg, timestamp
+    orderid, contract_name, contract_type, status, deal_amount, amount, price, price_avg, timestamp
   }
 }
 
@@ -56,15 +56,16 @@ const publishOn = (ws: WebSocket) => {
     let er = {
       execId: '',
       orderId: order.orderid,
-      symbol: order.contract_name,
+      symbol: (order.contract_name.substring(0,3).toLowerCase() + "_usd")+ "," + order.contract_type,
       price: order.price,
-      quantity: order.deal_amount,
-      cumExecQuantity: order.deal_amount += order.deal_amount,
-      cumExecPrice: order.price_avg,
+      quantity: order.amount,
+      execQuantity: order.deal_amount,
+      execPrice: order.price_avg,
       status: sts[order.status],
       timestamp: order.timestamp.unix()
     }
     er.execId = CryptoJS.SHA1(JSON.stringify(er)).toString(CryptoJS.enc.Hex)
+    console.log(er)
     ws.send(JSON.stringify(er))
   }
 
@@ -88,33 +89,16 @@ const publishOn = (ws: WebSocket) => {
     if ("channel" in message[0]) {
       if (message[0].channel === 'ok_sub_futureusd_trades') {
         const orders = message[0].data
-        switch(message[0].data.status) {
-            case 0:
-              console.log("Active")
-              handleOrder(orders)
-              break
-            case 1:
-              handleOrder(orders)
-              break
-            case 2:
-              handleOrder(orders)
-              break
-            case 4:
-              handleOrder(orders)
-              break
-            case -1:
-              console.log("Cancelled")
-              handleOrder(orders)
-              break
-            default: console.log(`Listening on ${wsport}`)
-        }
+        handleOrder(orders)
       }
     }
   }
   const cancel: express.Handler = (req, res) => {
     const api_key = credentials.public
-    const symbol = "btc_usd"
-    const contract_type = "next_week"
+    console.log(req.query.symbol)
+    const contract = req.query.symbol.split(',')
+    const symbol = contract[0]
+    const contract_type = contract[1]
     const order_id = req.query.id
     const ocp = {api_key, symbol, contract_type, order_id}
     const ocs = sign(ocp).query
@@ -123,7 +107,7 @@ const publishOn = (ws: WebSocket) => {
       uri,
       method: 'POST',
     })
-    res.end()
+    res.send(JSON.stringify(request))
   }
   app.post('/cancel', cancel)
 }
